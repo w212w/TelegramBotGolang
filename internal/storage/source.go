@@ -60,7 +60,7 @@ func (s *SourcePostgresStorage) Add(ctx context.Context, source model.Source) (i
 	var id int64
 	row := conn.QueryRowxContext(
 		ctx,
-		query: `INSERT INTO sources (name, feed_url, created_at) VALUES ($1, $2, $3) RETURNING id`,
+		`INSERT INTO sources (name, feed_url, created_at) VALUES ($1, $2, $3) RETURNING id`,
 		source.Name,
 		source.FeedUrl
 		source.CreatedAt,
