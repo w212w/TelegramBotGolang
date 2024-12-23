@@ -62,10 +62,10 @@ func (s *SourcePostgresStorage) Add(ctx context.Context, source model.Source) (i
 		ctx,
 		`INSERT INTO sources (name, feed_url, created_at) VALUES ($1, $2, $3) RETURNING id`,
 		source.Name,
-		source.FeedUrl
+		source.FeedUrl,
 		source.CreatedAt,
 	)
-	
+
 	if err := row.Err(); err != nil {
 		return 0, err
 	}
@@ -77,7 +77,7 @@ func (s *SourcePostgresStorage) Add(ctx context.Context, source model.Source) (i
 	return id, nil
 }
 
-func (s *SourcePostgresStorage) Delete (ctx context.Context, id int64) error {
+func (s *SourcePostgresStorage) Delete(ctx context.Context, id int64) error {
 	conn, err := s.db.Connx(ctx)
 	if err != nil {
 		return err
