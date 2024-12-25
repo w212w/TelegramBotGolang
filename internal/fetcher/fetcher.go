@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/tomakado/containers/set"
+	"go.tomakado.io/containers/set"
 )
 
 type ArticleStorage interface {
@@ -87,7 +87,7 @@ func (f *Fetcher) Fetch(ctx context.Context) error {
 			items, err := source.Fetch(ctx)
 
 			if err != nil {
-				log.Println("[ERROR] Fetching items from source %s: %v", source.Name(), err)
+				log.Printf("[ERROR] Fetching items from source %s: %v", source.Name(), err)
 				return
 			}
 
