@@ -7,6 +7,7 @@ require (
 	github.com/cristalhq/aconfig/aconfighcl v0.17.1
 	github.com/go-shiori/go-readability v0.0.0-20241012063810-92284fa8a71f
 	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1
+	github.com/jmoiron/sqlx v1.4.0
 	github.com/lib/pq v1.10.9
 	github.com/samber/lo v1.47.0
 	github.com/sashabaranov/go-openai v1.36.0
@@ -26,6 +27,5 @@ require (
 
 require (
 	github.com/SlyMarbo/rss v1.0.5
-	github.com/jmoiron/sqlx v1.4.0
 	golang.org/x/text v0.21.0 // indirect
 )

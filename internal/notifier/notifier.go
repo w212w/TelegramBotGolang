@@ -17,12 +17,12 @@ import (
 )
 
 type ArticleProvider interface {
-	AllNotPosted(ctx context.Context, since time.Time, limit int64) ([]model.Article, error)
-	MarkPosted(ctx context.Context, id int64) error
+	AllNotPosted(ctx context.Context, since time.Time, limit uint64) ([]model.Article, error)
+	MarkAsPosted(ctx context.Context, article model.Article) error
 }
 
 type Summarizer interface {
-	Summarize(ctx context.Context, text string) (string, error)
+	Summarize(text string) (string, error)
 }
 
 type Notifier struct {
@@ -84,7 +84,7 @@ func (n *Notifier) SelectAndSendArticle(ctx context.Context) error {
 
 	article := topOneArticles[0]
 
-	summary, err := n.extractSummary(ctx, article)
+	summary, err := n.extractSummary(article)
 	if err != nil {
 		log.Printf("[ERROR] failed to extract summary: %v", err)
 	}
@@ -93,12 +93,12 @@ func (n *Notifier) SelectAndSendArticle(ctx context.Context) error {
 		return err
 	}
 
-	return n.articles.MarkPosted(ctx, article.ID)
+	return n.articles.MarkAsPosted(ctx, article)
 }
 
 var redundantNewLines = regexp.MustCompile(`\n{3,}`)
 
-func (n *Notifier) extractSummary(ctx context.Context, article model.Article) (string, error) {
+func (n *Notifier) extractSummary(article model.Article) (string, error) {
 	var r io.Reader
 
 	if article.Summary != "" {
@@ -118,7 +118,7 @@ func (n *Notifier) extractSummary(ctx context.Context, article model.Article) (s
 		return "", err
 	}
 
-	summary, err := n.summarizer.Summarize(ctx, cleanText(doc.TextContent))
+	summary, err := n.summarizer.Summarize(cleanupText(doc.TextContent))
 	if err != nil {
 		return "", err
 	}
@@ -126,7 +126,7 @@ func (n *Notifier) extractSummary(ctx context.Context, article model.Article) (s
 	return "\n\n" + summary, nil
 }
 
-func cleanText(text string) string {
+func cleanupText(text string) string {
 	return redundantNewLines.ReplaceAllString(text, "\n")
 }
 
@@ -139,7 +139,7 @@ func (n *Notifier) sendArticle(article model.Article, summary string) error {
 		markup.EscapeForMarkdown(summary),
 		markup.EscapeForMarkdown(article.Link),
 	))
-	msg.ParseMode = tgbotapi.ModeMarkdownV2
+	msg.ParseMode = "MarkdownV2"
 
 	_, err := n.bot.Send(msg)
 	if err != nil {

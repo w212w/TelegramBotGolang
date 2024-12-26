@@ -2,7 +2,7 @@ package fetcher
 
 import (
 	"TelegramBotGolang/internal/model"
-	"TelegramBotGolang/internal/source"
+	src "TelegramBotGolang/internal/source"
 	"context"
 	"log"
 	"strings"
@@ -16,7 +16,7 @@ type ArticleStorage interface {
 	Store(ctx context.Context, article model.Article) error
 }
 
-type SourceProvider interface {
+type SourcesProvider interface {
 	Sources(ctx context.Context) ([]model.Source, error)
 }
 
@@ -28,7 +28,7 @@ type Source interface {
 
 type Fetcher struct {
 	articles ArticleStorage
-	sources  SourceProvider
+	sources  SourcesProvider
 
 	fetchInterval  time.Duration
 	filterKeywords []string
@@ -36,13 +36,13 @@ type Fetcher struct {
 
 func New(
 	articleStorage ArticleStorage,
-	sourceProvider SourceProvider,
+	sourcesProvider SourcesProvider,
 	fetchInterval time.Duration,
 	filterKeywords []string,
 ) *Fetcher {
 	return &Fetcher{
 		articles:       articleStorage,
-		sources:        sourceProvider,
+		sources:        sourcesProvider,
 		fetchInterval:  fetchInterval,
 		filterKeywords: filterKeywords,
 	}
@@ -76,27 +76,23 @@ func (f *Fetcher) Fetch(ctx context.Context) error {
 
 	var wg sync.WaitGroup
 
-	for _, src := range sources {
+	for _, source := range sources {
 		wg.Add(1)
-
-		rssSource := source.NewRSSSourceFromModel(src)
 
 		go func(source Source) {
 			defer wg.Done()
 
 			items, err := source.Fetch(ctx)
-
 			if err != nil {
-				log.Printf("[ERROR] Fetching items from source %s: %v", source.Name(), err)
+				log.Printf("[ERROR] failed to fetch items from source %q: %v", source.Name(), err)
 				return
 			}
 
 			if err := f.processItems(ctx, source, items); err != nil {
-				log.Printf("[ERROR] Processing items from source %s: %v", source.Name(), err)
+				log.Printf("[ERROR] failed to process items from source %q: %v", source.Name(), err)
 				return
 			}
-
-		}(rssSource)
+		}(src.NewRSSSourceFromModel(source))
 	}
 
 	wg.Wait()
@@ -109,6 +105,7 @@ func (f *Fetcher) processItems(ctx context.Context, source Source, items []model
 		item.Date = item.Date.UTC()
 
 		if f.itemShouldBeSkipped(item) {
+			log.Printf("[INFO] item %q (%s) from source %q should be skipped", item.Title, item.Link, source.Name())
 			continue
 		}
 
@@ -121,8 +118,8 @@ func (f *Fetcher) processItems(ctx context.Context, source Source, items []model
 		}); err != nil {
 			return err
 		}
-
 	}
+
 	return nil
 }
 
@@ -130,11 +127,10 @@ func (f *Fetcher) itemShouldBeSkipped(item model.Item) bool {
 	categoriesSet := set.New(item.Categories...)
 
 	for _, keyword := range f.filterKeywords {
-		titleContainsKeyword := strings.Contains(strings.ToLower(item.Title), keyword)
-
-		if categoriesSet.Contains(keyword) || titleContainsKeyword {
+		if categoriesSet.Contains(keyword) || strings.Contains(strings.ToLower(item.Title), keyword) {
 			return true
 		}
 	}
+
 	return false
 }

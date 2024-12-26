@@ -3,6 +3,7 @@ package source
 import (
 	"TelegramBotGolang/internal/model"
 	"context"
+	"strings"
 
 	"github.com/SlyMarbo/rss"
 	"github.com/samber/lo"
@@ -16,7 +17,7 @@ type RSSSource struct {
 
 func NewRSSSourceFromModel(m model.Source) RSSSource {
 	return RSSSource{
-		URL:        m.FeedUrl,
+		URL:        m.FeedURL,
 		SourceID:   m.ID,
 		SourceName: m.Name,
 	}
@@ -34,8 +35,8 @@ func (s RSSSource) Fetch(ctx context.Context) ([]model.Item, error) {
 			Categories: item.Categories,
 			Link:       item.Link,
 			Date:       item.Date,
-			Summary:    item.Summary,
 			SourceName: s.SourceName,
+			Summary:    strings.TrimSpace(item.Summary),
 		}
 	}), nil
 }

@@ -30,7 +30,7 @@ func Get() Config {
 	once.Do(func() {
 		loader := aconfig.LoaderFor(&cfg, aconfig.Config{
 			EnvPrefix: "NFB",
-			Files:     []string{"./config.hcl", "./config.local.hcl"},
+			Files:     []string{"../config.hcl", "../config.local.hcl", "$HOME/.config/news-feed-bot/config.hcl"},
 			FileDecoders: map[string]aconfig.FileDecoder{
 				".hcl": aconfighcl.New(),
 			},

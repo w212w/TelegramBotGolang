@@ -14,8 +14,10 @@ type Item struct {
 type Source struct {
 	ID        int64
 	Name      string
-	FeedUrl   string
+	FeedURL   string
+	Priority  int
 	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 type Article struct {
